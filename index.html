@@ -1,243 +1,26 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YaJu Ai(lua特化)</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
-    <style>
-        :root { --bg: #0f172a; --chat: #1e293b; --accent: #f59e0b; --text: #f1f5f9; }
-        * { box-sizing: border-box; }
-        html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; }
-        header { background: #000; padding: 15px; text-align: center; border-bottom: 2px solid var(--accent); font-weight: bold; flex-shrink: 0; }
-        
-        /* タブエリア */
-        #tabs-container { background: #1a1a1a; padding: 10px 20px; display: flex; gap: 8px; align-items: center; border-bottom: 1px solid #333; overflow-x: auto; flex-shrink: 0; }
-        .tab { background: #2a2a2a; color: #aaa; padding: 8px 16px; border-radius: 8px 8px 0 0; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; border: 1px solid #444; }
-        .tab.active { background: var(--chat); color: var(--accent); border-bottom: 2px solid var(--accent); }
-        .tab-close { color: #888; font-weight: bold; margin-left: 8px; }
-        .tab-close:hover { color: #f00; }
-        #new-tab-btn { background: var(--accent); color: #000; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
-        
-        #chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; min-height: 0; }
-        .msg { max-width: 85%; padding: 12px 16px; border-radius: 12px; line-height: 1.6; }
-        .user { align-self: flex-end; background: #334155; border: 1px solid #475569; }
-        .ai { align-self: flex-start; background: #1e293b; border-left: 4px solid var(--accent); }
-        pre { background: #000 !important; padding: 15px; border-radius: 8px; overflow-x: auto; position: relative; }
-        .copy-btn { position: absolute; top: 10px; right: 10px; background: var(--accent); color: #000; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; opacity: 0.8; }
-        .copy-btn:hover { opacity: 1; }
-        .copy-btn.copied { background: #10b981; }
-        #input-area { background: #000; padding: 20px; display: flex; gap: 10px; border-top: 1px solid #333; flex-shrink: 0; }
-        textarea { flex: 1; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 8px; padding: 12px; height: 60px; resize: none; outline: none; font-family: inherit; font-size: 14px; }
-        button { background: var(--accent); color: #000; border: none; padding: 0 25px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .loading { font-size: 12px; color: var(--accent); margin-left: 20px; display: none; padding: 5px; }
-    </style>
-</head>
-<body>
-
+<!DOCTYPE html> <html lang="ja"> <head>     <meta charset="UTF-8">     <meta name="viewport" content="width=device-width, initial-scale=1.0">     <title>YaJu Ai(lua特化)</title>     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />     <style>         :root { --bg: #0f172a; --chat: #1e293b; --accent: #f59e0b; --text: #f1f5f9; }         * { box-sizing: border-box; }         html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; }         header { background: #000; padding: 15px; text-align: center; border-bottom: 2px solid var(--accent); font-weight: bold; flex-shrink: 0; }                  /* タブエリア */         #tabs-container { background: #1a1a1a; padding: 10px 20px; display: flex; gap: 8px; align-items: center; border-bottom: 1px solid #333; overflow-x: auto; flex-shrink: 0; }         .tab { background: #2a2a2a; color: #aaa; padding: 8px 16px; border-radius: 8px 8px 0 0; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; border: 1px solid #444; }         .tab.active { background: var(--chat); color: var(--accent); border-bottom: 2px solid var(--accent); }         .tab-close { color: #888; font-weight: bold; margin-left: 8px; }         .tab-close:hover { color: #f00; }         #new-tab-btn { background: var(--accent); color: #000; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }                  #chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; min-height: 0; }         .msg { max-width: 85%; padding: 12px 16px; border-radius: 12px; line-height: 1.6; }         .user { align-self: flex-end; background: #334155; border: 1px solid #475569; }         .ai { align-self: flex-start; background: #1e293b; border-left: 4px solid var(--accent); }         pre { background: #000 !important; padding: 15px; border-radius: 8px; overflow-x: auto; position: relative; }         .copy-btn { position: absolute; top: 10px; right: 10px; background: var(--accent); color: #000; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; opacity: 0.8; }         .copy-btn:hover { opacity: 1; }         .copy-btn.copied { background: #10b981; }         #input-area { background: #000; padding: 20px; display: flex; gap: 10px; border-top: 1px solid #333; flex-shrink: 0; }         textarea { flex: 1; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 8px; padding: 12px; height: 60px; resize: none; outline: none; font-family: inherit; font-size: 14px; }         button { background: var(--accent); color: #000; border: none; padding: 0 25px; border-radius: 8px; cursor: pointer; font-weight: bold; }         .loading { font-size: 12px; color: var(--accent); margin-left: 20px; display: none; padding: 5px; }     </style> </head> <body>
 <header>YaJu Ai(lua特化)</header>
-
-<div id="tabs-container">
-    <button id="new-tab-btn">+ 新規チャット</button>
-</div>
-
-<div id="chat-container">
-    <div class="msg ai">いつでも話しかけてください</div>
-</div>
-<div class="loading" id="loading">YaJu Aiに接続中...</div>
-<div id="input-area">
-    <textarea id="user-input" placeholder="質問を入力..."></textarea>
-    <button id="send-btn">送信</button>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-lua.min.js"></script>
-
-<script>
-    const chatContainer = document.getElementById('chat-container');
-    const userInput = document.getElementById('user-input');
-    const sendBtn = document.getElementById('send-btn');
-    const loading = document.getElementById('loading');
-    const tabsContainer = document.getElementById('tabs-container');
-    const newTabBtn = document.getElementById('new-tab-btn');
-
-    let rawKey = "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";
-    const GROQ_API_KEY = rawKey.replace(/^Gsk_/, "gsk_");
-
-    // タブ管理
-    let tabs = {};
-    let currentTabId = null;
-    let tabCounter = 1;
-
-    // 初期化
-    function init() {
-        createTab();
-    }
-
-    // 新規タブ作成
-    function createTab() {
-        const tabId = `tab-${tabCounter++}`;
-        tabs[tabId] = {
-            messages: [],
-            history: []
-        };
-        
-        const tabEl = document.createElement('div');
-        tabEl.className = 'tab';
-        tabEl.dataset.tabId = tabId;
-        tabEl.innerHTML = `チャット ${Object.keys(tabs).length}<span class="tab-close">×</span>`;
-        
-        tabEl.addEventListener('click', (e) => {
-            if (e.target.classList.contains('tab-close')) {
-                closeTab(tabId, tabEl);
-            } else {
-                switchTab(tabId);
-            }
-        });
-        
-        tabsContainer.insertBefore(tabEl, newTabBtn);
-        switchTab(tabId);
-    }
-
-    // タブ切り替え
-    function switchTab(tabId) {
-        // 現在のチャットを保存
-        if (currentTabId) {
-            tabs[currentTabId].messages = Array.from(chatContainer.children).map(el => ({
-                html: el.outerHTML,
-                type: el.classList.contains('user') ? 'user' : 'ai'
-            }));
-        }
-
-        currentTabId = tabId;
-
-        // タブのアクティブ状態更新
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        const activeTab = document.querySelector(`[data-tab-id="${tabId}"]`);
-        if (activeTab) activeTab.classList.add('active');
-
-        // チャット履歴を復元
-        chatContainer.innerHTML = '';
-        if (tabs[tabId].messages.length > 0) {
-            tabs[tabId].messages.forEach(msg => {
-                const temp = document.createElement('div');
-                temp.innerHTML = msg.html;
-                chatContainer.appendChild(temp.firstChild);
-            });
-        } else {
-            // 初回メッセージ
-            appendMessage("いつでも話しかけてください", 'ai');
-        }
-        
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
-
-    // タブを閉じる
-    function closeTab(tabId, tabEl) {
-        if (Object.keys(tabs).length === 1) {
-            alert('最後のタブは閉じれません');
-            return;
-        }
-
-        delete tabs[tabId];
-        tabEl.remove();
-
-        if (currentTabId === tabId) {
-            const remainingTabId = Object.keys(tabs)[0];
-            switchTab(remainingTabId);
-        }
-    }
-
-    async function sendMessage() {
-        const text = userInput.value.trim();
-        if (!text) return;
-
-        appendMessage(text, 'user');
-        tabs[currentTabId].history.push({ role: "user", content: text });
-        userInput.value = '';
-        sendBtn.disabled = true;
-        loading.style.display = 'block';
-
-        try {
-            const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${GROQ_API_KEY}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    model: "llama-3.3-70b-versatile",
-                    messages: [
-                        { role: "system", content: "あなたはRobloxの専門家です。日本語で回答し、必ずLuauのコードブロックを含めてください。" },
-                        ...tabs[currentTabId].history
-                    ]
-                })
-            });
-
-            const data = await response.json();
-            
-            if (data.error) {
-                throw new Error(`${data.error.type}: ${data.error.message}`);
-            }
-
-            const aiResponse = data.choices[0].message.content;
-            appendMessage(aiResponse, 'ai');
-            tabs[currentTabId].history.push({ role: "assistant", content: aiResponse });
-
-        } catch (error) {
-            appendMessage("⚠️接続エラー: " + error.message + "\n\nキーが正しくコピーされているか、Groqのダッシュボードで再作成してみてください。", 'ai');
-        } finally {
-            sendBtn.disabled = false;
-            loading.style.display = 'none';
-        }
-    }
-
-    function appendMessage(text, type) {
-        const d = document.createElement('div');
-        d.className = `msg ${type}`;
-        if (text.includes("```")) {
-            const parts = text.split("```");
-            let html = "";
-            parts.forEach((c, i) => {
-                if (i % 2 === 1) {
-                    const code = c.replace(/^[a-z]+\n/i, ""); 
-                    html += `<pre><code class="language-lua">${escape(code)}</code></pre>`;
-                } else { html += c.replace(/\n/g, "<br>"); }
-            });
-            d.innerHTML = html;
-            
-            // コピーボタンを追加
-            d.querySelectorAll('pre').forEach(pre => {
-                const copyBtn = document.createElement('button');
-                copyBtn.className = 'copy-btn';
-                copyBtn.textContent = 'コピー';
-                copyBtn.onclick = () => {
-                    const code = pre.querySelector('code').textContent;
-                    navigator.clipboard.writeText(code).then(() => {
-                        copyBtn.textContent = '✓ コピー完了';
-                        copyBtn.classList.add('copied');
-                        setTimeout(() => {
-                            copyBtn.textContent = 'コピー';
-                            copyBtn.classList.remove('copied');
-                        }, 2000);
-                    });
-                };
-                pre.appendChild(copyBtn);
-            });
-        } else { d.innerText = text; }
-        chatContainer.appendChild(d);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-        Prism.highlightAllUnder(d);
-    }
-
-    function escape(t) { return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
-    
-    sendBtn.addEventListener('click', sendMessage);
-    userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
-    newTabBtn.addEventListener('click', createTab);
-
-    init();
-</script>
-</body>
-</html>
+<div id="tabs-container">     <button id="new-tab-btn">+ 新規チャット</button> </div>
+<div id="chat-container">     <div class="msg ai">いつでも話しかけてください</div> </div> <div class="loading" id="loading">YaJu Aiに接続中...</div> <div id="input-area">     <textarea id="user-input" placeholder="質問を入力..."></textarea>     <button id="send-btn">送信</button> </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script> <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-lua.min.js"></script>
+<script>     const chatContainer = document.getElementById('chat-container');     const userInput = document.getElementById('user-input');     const sendBtn = document.getElementById('send-btn');     const loading = document.getElementById('loading');     const tabsContainer = document.getElementById('tabs-container');     const newTabBtn = document.getElementById('new-tab-btn');
+    let rawKey = "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";     const GROQ_API_KEY = rawKey.replace(/^Gsk_/, "gsk_");
+    // タブ管理     let tabs = {};     let currentTabId = null;     let tabCounter = 1;
+    // 初期化     function init() {         createTab();     }
+    // 新規タブ作成     function createTab() {         const tabId = `tab-${tabCounter++}`;         tabs[tabId] = {             messages: [],             history: []         };                  const tabEl = document.createElement('div');         tabEl.className = 'tab';         tabEl.dataset.tabId = tabId;         tabEl.innerHTML = `チャット ${Object.keys(tabs).length}<span class="tab-close">×</span>`;                  tabEl.addEventListener('click', (e) => {             if (e.target.classList.contains('tab-close')) {                 closeTab(tabId, tabEl);             } else {                 switchTab(tabId);             }         });                  tabsContainer.insertBefore(tabEl, newTabBtn);         switchTab(tabId);     }
+    // タブ切り替え     function switchTab(tabId) {         // 現在のチャットを保存         if (currentTabId) {             tabs[currentTabId].messages = Array.from(chatContainer.children).map(el => ({                 html: el.outerHTML,                 type: el.classList.contains('user') ? 'user' : 'ai'             }));         }
+        currentTabId = tabId;
+        // タブのアクティブ状態更新         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));         const activeTab = document.querySelector(`[data-tab-id="${tabId}"]`);         if (activeTab) activeTab.classList.add('active');
+        // チャット履歴を復元         chatContainer.innerHTML = '';         if (tabs[tabId].messages.length > 0) {             tabs[tabId].messages.forEach(msg => {                 const temp = document.createElement('div');                 temp.innerHTML = msg.html;                 chatContainer.appendChild(temp.firstChild);             });         } else {             // 初回メッセージ             appendMessage("いつでも話しかけてください", 'ai');         }                  chatContainer.scrollTop = chatContainer.scrollHeight;     }
+    // タブを閉じる     function closeTab(tabId, tabEl) {         if (Object.keys(tabs).length === 1) {             alert('最後のタブは閉じれません');             return;         }
+        delete tabs[tabId];         tabEl.remove();
+        if (currentTabId === tabId) {             const remainingTabId = Object.keys(tabs)[0];             switchTab(remainingTabId);         }     }
+    async function sendMessage() {         const text = userInput.value.trim();         if (!text) return;
+        appendMessage(text, 'user');         tabs[currentTabId].history.push({ role: "user", content: text });         userInput.value = '';         sendBtn.disabled = true;         loading.style.display = 'block';
+        try {             const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {                 method: "POST",                 headers: {                     "Authorization": `Bearer ${GROQ_API_KEY}`,                     "Content-Type": "application/json"                 },                 body: JSON.stringify({                     model: "llama-3.3-70b-versatile",                     messages: [                         { role: "system", content: "あなたはRobloxの専門家です。日本語で回答し、必ずLuauのコードブロックを含め、コードを省略せずに要望通りの機能ができるようにしてください。" },                         ...tabs[currentTabId].history                     ]                 })             });
+            const data = await response.json();                          if (data.error) {                 throw new Error(`${data.error.type}: ${data.error.message}`);             }
+            const aiResponse = data.choices[0].message.content;             appendMessage(aiResponse, 'ai');             tabs[currentTabId].history.push({ role: "assistant", content: aiResponse });
+        } catch (error) {             appendMessage("⚠️接続エラー: " + error.message + "\n\nキーが正しくコピーされているか、Groqのダッシュボードで再作成してみてください。", 'ai');         } finally {             sendBtn.disabled = false;             loading.style.display = 'none';         }     }
+    function appendMessage(text, type) {         const d = document.createElement('div');         d.className = `msg ${type}`;         if (text.includes("```")) {             const parts = text.split("```");             let html = "";             parts.forEach((c, i) => {                 if (i % 2 === 1) {                     const code = c.replace(/^[a-z]+\n/i, "");                      html += `<pre><code class="language-lua">${escape(code)}</code></pre>`;                 } else { html += c.replace(/\n/g, "<br>"); }             });             d.innerHTML = html;                          // コピーボタンを追加             d.querySelectorAll('pre').forEach(pre => {                 const copyBtn = document.createElement('button');                 copyBtn.className = 'copy-btn';                 copyBtn.textContent = 'コピー';                 copyBtn.onclick = () => {                     const code = pre.querySelector('code').textContent;                     navigator.clipboard.writeText(code).then(() => {                         copyBtn.textContent = '✓ コピー完了';                         copyBtn.classList.add('copied');                         setTimeout(() => {                             copyBtn.textContent = 'コピー';                             copyBtn.classList.remove('copied');                         }, 2000);                     });                 };                 pre.appendChild(copyBtn);             });         } else { d.innerText = text; }         chatContainer.appendChild(d);         chatContainer.scrollTop = chatContainer.scrollHeight;         Prism.highlightAllUnder(d);     }
+    function escape(t) { return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }          sendBtn.addEventListener('click', sendMessage);     userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });     newTabBtn.addEventListener('click', createTab);
+    init(); </script> </body> </html>
